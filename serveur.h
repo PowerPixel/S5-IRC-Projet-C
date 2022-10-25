@@ -21,4 +21,6 @@
  */
 int recois_envoie_message(int socketfd);
 
+int recois_balises(char* data);
+
 #endif

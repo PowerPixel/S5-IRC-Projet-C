@@ -28,7 +28,6 @@ void plot(char *data)
   FILE *p = popen("gnuplot -persist", "w"); */
 
   if (access("colors", F_OK) == 0) {
-    printf("Verificatoin: access\n");
     remove("colors");
   }  
   FILE *save_file_for_colors = fopen("colors", "w");
@@ -176,6 +175,11 @@ int recois_envoie_message(int socketfd)
     renvoie_calcul(client_socket_fd, data);
   }
 
+  if (strcmp(code, "balises:") == 0) {
+      recois_balises( data);
+      renvoie_message(client_socket_fd, "balises: enregistré");
+  }
+
   else
   {
     plot(data);
@@ -185,6 +189,43 @@ int recois_envoie_message(int socketfd)
   // fermer le socket
   close(socketfd);
   return (EXIT_SUCCESS);
+}
+
+int recois_balises(char* data) {
+    if (access("tags", F_OK) == 0) {
+        remove("tags");
+    }
+    FILE *save_file_for_tags= fopen("tags", "w");
+    if (save_file_for_tags == NULL) {
+        perror("Cannot open save tags file");
+        exit(EXIT_FAILURE);
+    }
+
+    int count = 0;
+    int n;
+    char *saveptr = NULL;
+    char *str = data;
+    while (1)
+    {
+        char *token = strtok_r(str, ",", &saveptr);
+        if (token == NULL)
+        {
+            break;
+        }
+        str = NULL;
+        printf("%d: %s\n", count, token);
+        if (count >= 1) {
+            // Sauvegarde des couleurs
+            fprintf(save_file_for_tags, "%s\n", token);
+        }
+        if (count == 1)
+        {
+            n = atoi(token);
+            printf("n = %d\n", n);
+        }
+        count++;
+    }
+    return 0;
 }
 
 int main()

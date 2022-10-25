@@ -146,6 +146,87 @@ int envoie_calcul_recois_resultat(int socketfd, char* operator, char* operand1, 
   return 0;
 }
 
+int envoie_balises(int socketfd, char* arg) {
+    int nb_balises;
+    char** tags;
+
+    if (strcmp(arg, "random") == 0) {
+        nb_balises = generer_entier_aleatoire(10, 15);
+
+        // On génére un tableau de nb_balises en taille
+        tags = malloc(sizeof(char*) * nb_balises);
+        for (int i = 0; i < nb_balises; i++) {
+            int length = generer_entier_aleatoire(3, 10);
+            tags[i] = malloc(sizeof(char) * length + 1);
+            for (int j = 0; j < length; j++) {
+                // On génére une lettre aléatoire pour chaque emplacement dans le mot
+                tags[i][j] = generer_entier_aleatoire(97, 122);
+            }
+            // Pour terminer la chaîne de caractères
+           tags[i][length] = 0;
+        }
+    } else {
+        nb_balises = atoi(arg);
+        if (nb_balises == 0) {
+            printf("Nombre de balises invalide");
+            exit(EXIT_FAILURE);
+        }
+
+        tags = malloc(sizeof(char*) * nb_balises);
+
+        for (int i = 0; i < nb_balises; i++) {
+            tags[i] = malloc(MAX_TAG_SIZE * sizeof(char));
+            printf("Veuillez rentrer le tag numéro %d -> ", i + 1);
+            fgets(tags[i], MAX_TAG_SIZE, stdin);
+            printf("\n");
+        }
+    }
+    return envoie_balises_socket(socketfd, nb_balises, tags);
+}
+
+
+/*
+ * Surcharge de la méthode envoie balise (pour le formatage et envoi sur socket)
+ */
+int envoie_balises_socket(int socketfd, int nb_balises, char** balises) {
+    char data[1024];
+    char buffer[256];
+    memset(data, 0, sizeof(data));
+
+    strcpy(data, "balises: ");
+    sprintf(buffer, "%d,", nb_balises);
+    strcat(data, buffer);
+
+    for (int i = 0; i < nb_balises; i++) {
+        if (i != nb_balises - 1) {
+            sprintf(buffer, "#%s,", balises[i]);
+            strcat(data, buffer);
+        } else {
+            sprintf(buffer, "#%s", balises[i]);
+            strcat(data, buffer);
+        }
+    }
+
+    int write_status = write(socketfd, data, strlen(data));
+    memset(data, 0, sizeof(data));
+    if (write_status < 0)
+    {
+        perror("erreur ecriture");
+        exit(EXIT_FAILURE);
+    }
+
+    int read_status = read(socketfd, data, sizeof(data));
+    if (read_status < 0)
+    {
+        perror("erreur lecture");
+        return -1;
+    }
+
+    printf("%s\n", data);
+
+    return 0;
+}
+
 void analyse(char *pathname, char *data)
 {
   // compte de couleurs
@@ -222,16 +303,18 @@ int generation_couleurs_aleatoire(char* data) {
   strcat(data, buffer);
   for (int i = 0; i < nb_colors; i++) {
     if (i != nb_colors - 1) {
-      sprintf(buffer, "#%x, ", (rand() % (MAX_RANDOM_COLOR - 0 + 1)) + 0);
+      sprintf(buffer, "#%x, ", generer_entier_aleatoire(0, MAX_RANDOM_COLOR));
     } else {
-      sprintf(buffer, "#%x", (rand() % (MAX_RANDOM_COLOR - 0 + 1)) + 0);
+      sprintf(buffer, "#%x", generer_entier_aleatoire(0, MAX_RANDOM_COLOR));
     }
     strcat(data, buffer);
   } 
 
-  
-
   return 0;
+}
+
+int generer_entier_aleatoire(int min, int max) {
+    return (rand() % (max - min + 1)) + min;
 }
 
 int main(int argc, char **argv)
@@ -246,8 +329,9 @@ int main(int argc, char **argv)
     printf("Arguments: ");
     printf("\n\t msg: pas d'arguments");
     printf("\n\t bmp: [<chemin vers l'image en bmp>|random (pour les tests de fonctionnalité)]");
-    printf("\n\thostname: pas d'arguments");
-    printf("\n\tcalcul: <operateur> <première opérande> <deuxième opérande>");
+    printf("\n\t hostname: pas d'arguments");
+    printf("\n\t calcul: <operateur> <première opérande> <deuxième opérande>");
+    printf("\n\t balises: random (génére un nombre aléatoire de balises entre 10 et 15 et les envoie)");
     printf("\n");
     return (EXIT_FAILURE);
   }
@@ -287,6 +371,10 @@ int main(int argc, char **argv)
 
   if (strcmp(argv[1], "calcul") == 0) {
     envoie_calcul_recois_resultat(socketfd, argv[2], argv[3], argv[4]);
+  }
+
+  if (strcmp(argv[1], "balises") == 0) {
+      envoie_balises(socketfd, argv[2]);
   }
   else
   {
