@@ -24,8 +24,8 @@
 void plot(char *data)
 {
 
-/*   // Extraire le compteur et les couleurs RGB
-  FILE *p = popen("gnuplot -persist", "w"); */
+  // Extraire le compteur et les couleurs RGB
+  FILE *p = popen("gnuplot -persist", "w");
 
   if (access("colors", F_OK) == 0) {
     remove("colors");
@@ -40,11 +40,11 @@ void plot(char *data)
   int n;
   char *saveptr = NULL;
   char *str = data;
-/*   fprintf(p, "set xrange [-15:15]\n");
+  fprintf(p, "set xrange [-15:15]\n");
   fprintf(p, "set yrange [-15:15]\n");
   fprintf(p, "set style fill transparent solid 0.9 noborder\n");
   fprintf(p, "set title 'Top 10 colors'\n");
-  fprintf(p, "plot '-' with circles lc rgbcolor variable\n"); */
+  fprintf(p, "plot '-' with circles lc rgbcolor variable\n");
   while (1)
   {
     char *token = strtok_r(str, ",", &saveptr);
@@ -53,31 +53,34 @@ void plot(char *data)
       break;
     }
     str = NULL;
-    printf("%d: %s\n", count, token);
+    if (count == 0) {
+      int *nb;
+      nb = malloc(sizeof(int));
+      printf("n token = %s\n", token);
+      // couleurs: n
+      sscanf(token, "%*s%d\n", nb);
+      printf("nb = %d\n", *nb);
+      n = *nb;
+    } else {
+          printf("%d: %s\n", count, token);
+    }
+
     if (count >= 1) {
       // Sauvegarde des couleurs
       fprintf(save_file_for_colors, "%s\n", token);
-    }
-    if (count == 1)
-    {
-      n = atoi(token);
-      printf("n = %d\n", n);
-    }
-    else
-    {
       // Le numéro 36, parceque 360° (cercle) / 10 couleurs = 36
-/*       fprintf(p, "0 0 10 %d %d 0x%s\n", (count - 1) * 36, count * 36, token + 1);
- */    }
+      fprintf(p, "0 0 10 %d %d 0x%s\n", (count - 1) * (360/n), count * (360/n), token + 1);
+    }
     count++;
   }
   
-/*   fprintf(p, "e\n");
- */  printf("Plot: FIN\n");
-/*   pclose(p);
- */  fclose(save_file_for_colors);
+  fprintf(p, "e\n");
+  printf("Plot: FIN\n");
+  pclose(p);
+  fclose(save_file_for_colors);
 }
 
-/* renvoyer un message (*data) au client (client_socket_fd)
+/* renvoyer un message (*data) au client (cli ent_socket_fd)
  */
 int renvoie_message(int client_socket_fd, char *data)
 {

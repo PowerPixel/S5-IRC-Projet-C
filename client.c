@@ -227,30 +227,27 @@ int envoie_balises_socket(int socketfd, int nb_balises, char** balises) {
     return 0;
 }
 
-void analyse(char *pathname, char *data)
+void analyse(char *pathname, char *data, int nb_colors_to_plot)
 {
   // compte de couleurs
   couleur_compteur *cc = analyse_bmp_image(pathname);
 
   int count;
   strcpy(data, "couleurs: ");
-  char temp_string[10] = "10,";
-  if (cc->size < 10)
-  {
-    sprintf(temp_string, "%d,", cc->size);
-  }
+  char temp_string[10];
+  sprintf(temp_string, "%d,", nb_colors_to_plot);
   strcat(data, temp_string);
 
-  // choisir 10 couleurs
-  for (count = 1; count < 11 && cc->size - count > 0; count++)
+  // choisir n couleurs
+  for (count = 1; count < nb_colors_to_plot + 1 && cc->size - count > 0; count++)
   {
     if (cc->compte_bit == BITS32)
     {
-      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
+      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
     }
     if (cc->compte_bit == BITS24)
     {
-      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
+      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
     }
     strcat(data, temp_string);
   }
@@ -259,7 +256,7 @@ void analyse(char *pathname, char *data)
   data[strlen(data) - 1] = '\0';
 }
 
-int envoie_couleurs(int socketfd, char *pathname)
+int envoie_couleurs(int socketfd, char *pathname, char* nb_colors_to_plot)
 {
 
   char data[1024];
@@ -269,7 +266,12 @@ int envoie_couleurs(int socketfd, char *pathname)
     // Générer 10 couleurs random
     generation_couleurs_aleatoire(data);
   } else {
-    analyse(pathname, data);
+    int _nb_colors_to_plot = atoi(nb_colors_to_plot);
+    if (_nb_colors_to_plot <= 0 || _nb_colors_to_plot > 30) {
+      printf("Nombre de couleurs à plotter invalide.\n");
+      exit(EXIT_FAILURE);
+    }
+    analyse(pathname, data, _nb_colors_to_plot);
   }
   
 
@@ -328,7 +330,7 @@ int main(int argc, char **argv)
     printf("usage: ./client [msg|hostname|bmp|calcul] <arguments>\n");
     printf("Arguments: ");
     printf("\n\t msg: pas d'arguments");
-    printf("\n\t bmp: [<chemin vers l'image en bmp>|random (pour les tests de fonctionnalité)]");
+    printf("\n\t bmp: [<chemin vers l'image en bmp>|random (pour les tests de fonctionnalité)] [nb couleurs dominantes, <=30]");
     printf("\n\t hostname: pas d'arguments");
     printf("\n\t calcul: <operateur> <première opérande> <deuxième opérande>");
     printf("\n\t balises: random (génére un nombre aléatoire de balises entre 10 et 15 et les envoie)");
@@ -376,11 +378,12 @@ int main(int argc, char **argv)
   if (strcmp(argv[1], "balises") == 0) {
       envoie_balises(socketfd, argv[2]);
   }
-  else
+  if (strcmp(argv[1], "bmp") == 0)
   {
     // envoyer et recevoir les couleurs prédominantes
     // d'une image au format BMP (argv[1])
-    envoie_couleurs(socketfd, argv[1]);
+    envoie_couleurs(socketfd, argv[2], argv[3]);
+    
   }
 
   close(socketfd);
