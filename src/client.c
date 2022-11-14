@@ -17,9 +17,21 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+
 
 #include "client.h"
 #include "bmp.h"
+#include "json.h"
+
+
+void parse_json_file(char* json_filename) {
+  int file = open(json_filename, O_RDONLY);
+  int len = lseek(file, 0, SEEK_END);
+  void *data = mmap(0, len, PROT_READ, MAP_PRIVATE, file, 0);
+  JSONObject *object = parse_json(data);
+}
 
 char* get_hostname() {
     int ret;
@@ -384,6 +396,11 @@ int main(int argc, char **argv)
     // d'une image au format BMP (argv[1])
     envoie_couleurs(socketfd, argv[2], argv[3]);
     
+  }
+
+  if (strcmp(argv[1], "json") == 0)
+  {
+    parse_json_file(argv[2]);
   }
 
   close(socketfd);
