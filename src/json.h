@@ -128,3 +128,8 @@ void convert_to_data(char* data, JSONObject* object);
     Method to convert JSONArray to data string (for sending it over a socket :°) )
 */
 void convert_json_array_to_data(char* data, JSONArray* array);
+
+/*
+    Method to convert JSON array to text !!!!!! omg!!!
+ */
+int json_to_text(JSONObject* object, char* data);

@@ -291,3 +291,38 @@ void convert_json_array_to_data(char* data, JSONArray* array) {
     }
     sprintf(data + strlen(data), "]");
 }
+
+int json_to_text(JSONObject* object, char* data) {
+    if (object->nb_field != 2) {
+        return -1;
+    }
+    // The first field of the object isn't a code, go away
+    if (strcmp(object->fields[0]->key, "code") != 0) {
+        return -1;
+    }
+    if (strcmp(object->fields[1]->key, "valeurs") != 0) {
+        return -1;
+    }
+
+    sprintf(data, "%s: ", object->fields[0]->value.string);
+    int* integer;
+    for (int i = 0; i < object->fields[1]->value.array->array_size; i++) {
+        switch (object->fields[1]->value.array->array_type[i]) {
+            case String:
+                sprintf(data + strlen(data), "%s", (char *) object->fields[1]->value.array->array[i]);
+                break;
+            case Integer:
+                integer = (int *) object->fields[1]->value.array->array[i];
+                sprintf(data + strlen(data), "%d", *integer);
+                break;
+            case Array:
+            default:
+                break;
+        }
+        if ((i + 1) != object->fields[1]->value.array->array_size) {
+            sprintf(data + strlen(data), ", ");
+        }
+    }
+
+    return 0;
+}

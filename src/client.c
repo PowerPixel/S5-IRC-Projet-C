@@ -172,7 +172,7 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operato
     JSONObject* object = create_json_object("calcul", arguments);
 
     convert_to_data(data, object);
-
+    printf("Converted data -> %s\n", data);
   }
   
 

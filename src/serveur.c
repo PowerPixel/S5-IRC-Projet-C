@@ -10,9 +10,7 @@
  * de traiter ces messages et de répondre aux clients.
  */
 
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/epoll.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +18,8 @@
 #include <unistd.h>
 
 #include "serveur.h"
+#include "commons.h"
+#include "json.h"
 
 void plot(char *data)
 {
@@ -137,6 +137,9 @@ int recois_envoie_message(int socketfd)
 {
   struct sockaddr_in client_addr;
   char data[1024];
+  Protocol protocol = Text;
+  JSONObject *object;
+
 
   unsigned int client_addr_len = sizeof(client_addr);
 
@@ -160,11 +163,21 @@ int recois_envoie_message(int socketfd)
     return (EXIT_FAILURE);
   }
 
+  printf("Full message -> %s\n", data);
+  // Extract protocol
+  sscanf(data, "%d\n%s", (int *) &protocol, data);
+
   /*
    * extraire le code des données envoyées par le client.
    * Les données envoyées par le client peuvent commencer par le mot "message :" ou un autre mot.
    */
+  printf("Protocole : %d\n", protocol);
   printf("Message recu: %s\n", data);
+  if (protocol == JSON) {
+      object = parse_json(data);
+      json_to_text(object, data);
+      printf("Converted data -> %s\n", data);
+  }
   char code[10];
   sscanf(data, "%s", code);
 
@@ -172,18 +185,12 @@ int recois_envoie_message(int socketfd)
   if (strcmp(code, "message:") == 0 || strcmp(code, "nom:") == 0)
   {
     renvoie_message(client_socket_fd, data);
-  }
-
-  if (strcmp(code, "calcul:") == 0) {
+  } else if (strcmp(code, "calcul:") == 0) {
     renvoie_calcul(client_socket_fd, data);
-  }
-
-  if (strcmp(code, "balises:") == 0) {
-      recois_balises( data);
+  } else if (strcmp(code, "balises:") == 0) {
+      recois_balises(data);
       renvoie_message(client_socket_fd, "balises: enregistré");
-  }
-
-  else
+  } else
   {
     plot(data);
     renvoie_message(client_socket_fd, "couleurs: enregistré");
