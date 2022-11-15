@@ -48,8 +48,14 @@ int envoie_balises_socket(int socketfd, int nb_balises, char** balises);
  */
 int generer_entier_aleatoire(int min, int max);
 
+/*
+* Fonction qui génére des couleurs aléatoire
+*/
 int generation_couleurs_aleatoire(char* data);
 
+/*
+* Fonction permettant de récupérer le nom d'hôte de la machine executant le code
+*/
 
 char* get_hostname();
 

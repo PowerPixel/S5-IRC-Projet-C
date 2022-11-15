@@ -31,6 +31,7 @@ void parse_json_file(char* json_filename) {
   int len = lseek(file, 0, SEEK_END);
   void *data = mmap(0, len, PROT_READ, MAP_PRIVATE, file, 0);
   JSONObject *object = parse_json(data);
+  print_json_object(object);
 }
 
 char* get_hostname() {

@@ -37,7 +37,7 @@ typedef struct
         int i_value; // 1, 3
         JSONArray* array; // 2
         double d_value; // 4
-    };
+    } value;
 } JSONField;
 
 typedef struct 
@@ -51,3 +51,5 @@ JSONObject* parse_json(char* input);
 JSONArray* parse_array(char** input);
 JSONField* parse_field(char** input);
 char* parse_string(char** input);
+void print_json_object(JSONObject* object);
+void print_json_array(JSONArray* array);

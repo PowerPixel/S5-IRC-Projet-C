@@ -69,8 +69,6 @@ JSONField* parse_field(char** input) {
     }
     _input++;
     // Parsing field
-    // "key": "value"
-    // "key": [...]
     while (*_input == ' ' || *_input == '\t' || *_input == '\n') {
         _input++;
     }
@@ -79,13 +77,13 @@ JSONField* parse_field(char** input) {
             // Parsing string
             _input++;
             result->type = 0;
-            result->string = parse_string(&_input);
+            result->value.string = parse_string(&_input);
             break;
         case '[':
             // Parsing array
             _input++;
             result->type = 2;
-            result->array = parse_array(&_input);
+            result->value.array = parse_array(&_input);
             break;
         default:
             perror("Unrecognized char in JSON Object");
@@ -132,13 +130,12 @@ JSONArray* parse_array(char** input) {
         }
 
         if (*_input == '\"') {
-            printf("\t\t Reading string...\n");
             char* parsed_string = malloc(sizeof(char) * MAX_STRING_SIZE);
             int string_size = 0;
             _input++;
-            while (*_input != '\"') {
-                _input++;
+            while (*_input != '\"') {              
                 memcpy(&(parsed_string[string_size++]), _input, 1);
+                _input++;
             }
             result->array_size = result->array_size + 1;
             result->array[result->array_size - 1] = parsed_string;
@@ -151,4 +148,48 @@ JSONArray* parse_array(char** input) {
     }
     *input = _input;
     return result;
+}
+
+void print_json_object(JSONObject* object) {
+    printf("{\n");
+    for (int i = 0; i < object->nb_field; i++) {
+        JSONField *field = object->fields[i];
+        printf("\t \"%s\": ", field->key);
+        switch (field->type) {
+            // We don't use other types in this project, and we can be lazy
+            // So we don't implement boolean or doubles or int print
+            case 0:
+                printf("\"%s\"", field->value.string);
+                break;
+            case 2:
+                print_json_array(field->value.array);
+                break;
+            default:
+                break;
+        }
+        if (i != (object->nb_field - 1)) {
+            printf(", \n");
+        }
+    }
+    printf("\n}\n");
+}
+
+void print_json_array(JSONArray* array) {
+    printf("[ ");
+    for (int i = 0; i < array->array_size; i++) {
+        switch(array->array_type[i]) {
+            case 0:
+                printf("%d", *((int *) array->array[i]));
+                break;
+            case 1:
+                printf("\"%s\"", (char *) array->array[i]);
+                break;
+            default:
+                break;
+        }
+        if (i != (array->array_size - 1)) {
+            printf(", ");
+        }
+    }
+    printf(" ]");
 }
