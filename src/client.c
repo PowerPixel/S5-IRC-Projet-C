@@ -19,11 +19,13 @@
 #include <netinet/in.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <stdbool.h>
 
 
 #include "client.h"
 #include "bmp.h"
 #include "json.h"
+#include "commons.h"
 
 
 void parse_json_file(char* json_filename) {
@@ -53,9 +55,8 @@ char* get_hostname() {
  * Il faut un argument : l'identifiant de la socket
  */
 
-int envoie_recois_message(int socketfd)
+int envoie_recois_message(int socketfd, Protocol protocol)
 {
-
   char data[1024];
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
@@ -64,9 +65,20 @@ int envoie_recois_message(int socketfd)
   char message[1024];
   printf("Votre message (max 1000 caracteres): ");
   fgets(message, sizeof(message), stdin);
-  strcpy(data, "message: ");
-  strcat(data, message);
+  message[strlen(message) - 1] = '\0';
+  sprintf(data, "%d\n", protocol);
+  if (protocol == Text) {
+    sprintf(data + strlen(data), "message: ");
+    sprintf(data + strlen(data), "%s", message);
+  } else if (protocol == JSON) {
+    JSONArray *arguments = create_array();
+    insert_str_into_array(message, arguments);
+    JSONObject *object = create_json_object("message", arguments);
+    print_json_object(object);
+    convert_to_data(data, object);
+  }
 
+  printf("\ndata : %s\n", data);
   int write_status = write(socketfd, data, strlen(data));
   if (write_status < 0)
   {
@@ -90,13 +102,23 @@ int envoie_recois_message(int socketfd)
   return 0;
 }
 
-int envoie_recois_hostname(int socketfd) {
+int envoie_recois_hostname(int socketfd, Protocol protocol) {
+
+  JSONObject* object;
   char data[MAX_HOSTNAME_SIZE];
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
+  sprintf(data, "%d\n", protocol);
+  if (protocol == Text) {
+    sprintf(data, "nom: ");
+    sprintf(data, "%s", get_hostname());
+  } else if (protocol == JSON) {
+    JSONArray* arguments = create_array();
+    insert_str_into_array(get_hostname(), arguments);
+    object = create_json_object("nom", arguments);
 
-  strcpy(data, "nom: ");
-  strcat(data, get_hostname());
+    convert_to_data(data, object);
+  }
 
   int write_status = write(socketfd, data, strlen(data));
   if (write_status < 0)
@@ -121,18 +143,37 @@ int envoie_recois_hostname(int socketfd) {
   return 0;
 }
 
-int envoie_calcul_recois_resultat(int socketfd, char* operator, char* operand1, char* operand2) {
+int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operator, char* operand1, char* operand2) {
   char data[MAX_HOSTNAME_SIZE];
   double resultat;
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
+  if (protocol == Text) {
+    sprintf(data, "calcul: ");
+    sprintf(data, "%s", operator);
+    sprintf(data, "%s", " ");
+    sprintf(data, "%s", operand1);
+    sprintf(data, "%s", " ");
+    sprintf(data, "%s", operand2);
+  } else if (protocol == JSON) {
+    JSONArray* arguments = create_array();
+    insert_str_into_array(operator, arguments);
+    int *_operand1 = malloc(sizeof(int));
+    int *_operand2 = malloc(sizeof(int));
 
-  strcpy(data, "calcul: ");
-  strcat(data, operator);
-  strcat(data, " ");
-  strcat(data, operand1);
-  strcat(data, " ");
-  strcat(data, operand2);
+    int tmp = atoi(operand1);
+    memcpy(_operand1, &tmp, sizeof(int));
+    insert_int_into_array(_operand1, arguments);
+    
+    tmp = atoi(operand2);
+    memcpy(_operand2, &tmp, sizeof(int));
+    insert_int_into_array(_operand2, arguments);
+   
+    JSONObject* object = create_json_object("calcul", arguments);
+
+    convert_to_data(data, object);
+
+  }
   
 
 
@@ -159,7 +200,7 @@ int envoie_calcul_recois_resultat(int socketfd, char* operator, char* operand1, 
   return 0;
 }
 
-int envoie_balises(int socketfd, char* arg) {
+int envoie_balises(int socketfd, Protocol protocol, char* arg) {
     int nb_balises;
     char** tags;
 
@@ -194,30 +235,44 @@ int envoie_balises(int socketfd, char* arg) {
             printf("\n");
         }
     }
-    return envoie_balises_socket(socketfd, nb_balises, tags);
+    return envoie_balises_socket(socketfd, protocol, nb_balises, tags);
 }
 
 
 /*
  * Surcharge de la méthode envoie balise (pour le formatage et envoi sur socket)
  */
-int envoie_balises_socket(int socketfd, int nb_balises, char** balises) {
+int envoie_balises_socket(int socketfd, Protocol protocol, int nb_balises, char** balises) {
     char data[1024];
     char buffer[256];
     memset(data, 0, sizeof(data));
+    if (protocol == Text) {
+      strcpy(data, "balises: ");
+      sprintf(buffer, "%d,", nb_balises);
+      strcat(data, buffer);
 
-    strcpy(data, "balises: ");
-    sprintf(buffer, "%d,", nb_balises);
-    strcat(data, buffer);
+      for (int i = 0; i < nb_balises; i++) {
+          if (i != nb_balises - 1) {
+              sprintf(buffer, "#%s,", balises[i]);
+              strcat(data, buffer);
+          } else {
+              sprintf(buffer, "#%s", balises[i]);
+              strcat(data, buffer);
+          }
+      }
+    } else if (protocol == JSON) {
+      JSONObject* object;
+      JSONArray* arguments = create_array();
+      int* _nb_balises = malloc(sizeof(int));
+      memcpy(_nb_balises, &nb_balises, sizeof(int));
+      insert_int_into_array(_nb_balises, arguments);
+      for (int i = 0; i < nb_balises; i++) {
+          insert_str_into_array(balises[i], arguments);
+      }
 
-    for (int i = 0; i < nb_balises; i++) {
-        if (i != nb_balises - 1) {
-            sprintf(buffer, "#%s,", balises[i]);
-            strcat(data, buffer);
-        } else {
-            sprintf(buffer, "#%s", balises[i]);
-            strcat(data, buffer);
-        }
+      object = create_json_object("balises", arguments);
+      convert_to_data(data, object);
+
     }
 
     int write_status = write(socketfd, data, strlen(data));
@@ -240,36 +295,71 @@ int envoie_balises_socket(int socketfd, int nb_balises, char** balises) {
     return 0;
 }
 
-void analyse(char *pathname, char *data, int nb_colors_to_plot)
+void analyse(char *pathname, Protocol protocol, char *data, int nb_colors_to_plot)
 {
   // compte de couleurs
   couleur_compteur *cc = analyse_bmp_image(pathname);
 
   int count;
-  strcpy(data, "couleurs: ");
   char temp_string[10];
-  sprintf(temp_string, "%d,", nb_colors_to_plot);
-  strcat(data, temp_string);
+  JSONArray *array;
+  
+  // We give the protocol used to the server
+  sprintf(data, "%d\n", protocol);
+
+
+  // If the protocol is text, we need specific headers
+  if (protocol == Text) {
+    sprintf(data, "couleurs: ");
+    sprintf(temp_string, "%d,", nb_colors_to_plot);
+    sprintf(data, "%s",temp_string);
+  } else if (protocol == JSON) {
+    array = malloc(sizeof(JSONArray));
+    int *nb_colors = malloc(sizeof(int));
+    memcpy(nb_colors, &nb_colors_to_plot, sizeof(int));
+    insert_int_into_array(nb_colors, array);
+  }
 
   // choisir n couleurs
   for (count = 1; count < nb_colors_to_plot + 1 && cc->size - count > 0; count++)
   {
     if (cc->compte_bit == BITS32)
     {
-      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
+      if (protocol == Text) {
+        sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
+      } else if (protocol == JSON) {
+        char* string = malloc(sizeof(char) * 8); // 8 chars (7 for colors, 1 for the 0 of ending string)
+        sprintf(string, "#%02x%02x%02x", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
+        insert_str_into_array(string, array);
+      }
     }
     if (cc->compte_bit == BITS24)
     {
-      sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
+      if (protocol == Text) {
+        sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
+      } else if (protocol == JSON) {
+        char* string = malloc(sizeof(char) * 8); // 8 chars (7 for colors, 1 for the 0 of ending string)
+        sprintf(string, "#%02x%02x%02x", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
+        insert_str_into_array(string, array);
+      }
     }
-    strcat(data, temp_string);
+    if (protocol == Text) {
+      sprintf(data, "%s", temp_string);
+    }
   }
 
-  // enlever le dernier virgule
-  data[strlen(data) - 1] = '\0';
+  if (protocol == JSON) {
+    JSONObject* object = create_json_object("couleurs", array);
+
+    convert_to_data(data, object);
+  }
+  if (protocol == Text) {
+    // enlever le dernier virgule
+    data[strlen(data) - 1] = '\0';
+  }
 }
 
-int envoie_couleurs(int socketfd, char *pathname, char* nb_colors_to_plot)
+int envoie_couleurs(int socketfd, Protocol protocol, char *pathname, char* nb_colors_to_plot)
 {
 
   char data[1024];
@@ -284,7 +374,7 @@ int envoie_couleurs(int socketfd, char *pathname, char* nb_colors_to_plot)
       printf("Nombre de couleurs à plotter invalide.\n");
       exit(EXIT_FAILURE);
     }
-    analyse(pathname, data, _nb_colors_to_plot);
+    analyse(pathname, protocol, data, _nb_colors_to_plot);
   }
   
 
@@ -335,12 +425,13 @@ int generer_entier_aleatoire(int min, int max) {
 int main(int argc, char **argv)
 {
   int socketfd;
+  Protocol parse_mode = Text;
 
   struct sockaddr_in server_addr;
 
   if (argc < 2)
   {
-    printf("usage: ./client [msg|hostname|bmp|calcul] <arguments>\n");
+    printf("usage: ./client [--json] [msg|hostname|bmp|calcul] <arguments>\n");
     printf("Arguments: ");
     printf("\n\t msg: pas d'arguments");
     printf("\n\t bmp: [<chemin vers l'image en bmp>|random (pour les tests de fonctionnalité)] [nb couleurs dominantes, <=30]");
@@ -349,6 +440,11 @@ int main(int argc, char **argv)
     printf("\n\t balises: random (génére un nombre aléatoire de balises entre 10 et 15 et les envoie)");
     printf("\n");
     return (EXIT_FAILURE);
+  }
+
+  if (strcmp(argv[1], "--json") == 0) {
+    parse_mode = JSON;
+    argv++;
   }
 
   /*
@@ -377,31 +473,27 @@ int main(int argc, char **argv)
 
   if (strcmp(argv[1], "msg") == 0) {
     // envoyer et recevoir un message
-    envoie_recois_message(socketfd);
+    envoie_recois_message(socketfd, parse_mode);
   }
 
   if (strcmp(argv[1], "hostname") == 0) {
-    envoie_recois_hostname(socketfd);
+    envoie_recois_hostname(socketfd, parse_mode);
   }
 
   if (strcmp(argv[1], "calcul") == 0) {
-    envoie_calcul_recois_resultat(socketfd, argv[2], argv[3], argv[4]);
+    envoie_calcul_recois_resultat(socketfd, parse_mode, argv[2], argv[3], argv[4]);
   }
 
   if (strcmp(argv[1], "balises") == 0) {
-      envoie_balises(socketfd, argv[2]);
+      envoie_balises(socketfd, parse_mode, argv[2]);
   }
+  
   if (strcmp(argv[1], "bmp") == 0)
   {
     // envoyer et recevoir les couleurs prédominantes
     // d'une image au format BMP (argv[1])
-    envoie_couleurs(socketfd, argv[2], argv[3]);
+    envoie_couleurs(socketfd, parse_mode, argv[2], argv[3]);
     
-  }
-
-  if (strcmp(argv[1], "json") == 0)
-  {
-    parse_json_file(argv[2]);
   }
 
   close(socketfd);

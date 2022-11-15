@@ -10,6 +10,8 @@
  * d'envoyer et de recevoir des messages. Ces messages peuvent être du simple texte ou des chiffres.
  */
 
+#include "commons.h"
+
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
@@ -28,20 +30,20 @@
  * Fonction d'envoi et de réception de messages
  * Il faut un argument : l'identifiant de la socket
  */
-int envoie_recois_message(int socketfd);
+int envoie_recois_message(int socketfd, Protocol protocol);
 
 /*
 * Fonction d'envoi du hostname
 */
-int envoie_recois_hostname(int socketfd);
+int envoie_recois_hostname(int socketfd, Protocol protocol);
 
 
-int envoie_balises(int socketfd, char* arg);
+int envoie_balises(int socketfd, Protocol protocol, char* arg);
 
 /*
  * Fonction d'envoi des balises
  */
-int envoie_balises_socket(int socketfd, int nb_balises, char** balises);
+int envoie_balises_socket(int socketfd, Protocol protocol, int nb_balises, char** balises);
 
 /*
  * Fonction qui génére un entier aléatoire entre min et max
@@ -56,7 +58,6 @@ int generation_couleurs_aleatoire(char* data);
 /*
 * Fonction permettant de récupérer le nom d'hôte de la machine executant le code
 */
-
 char* get_hostname();
 
 #endif

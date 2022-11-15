@@ -108,8 +108,8 @@ char* parse_string(char** input) {
 JSONArray* parse_array(char** input) {
     char* _input = *input;
     JSONArray *result = malloc(sizeof(JSONArray));
-    result->array = malloc(sizeof(long) * MAX_ARRAY_SIZE);
-    result->array_type = malloc(sizeof(long) * MAX_ARRAY_SIZE);
+    result->array = malloc(sizeof(void*) * MAX_ARRAY_SIZE);
+    result->array_type = malloc(sizeof(JSONType) * MAX_ARRAY_SIZE);
     result->array_size = 0;
     while (*_input != ']') {
         if (*_input == ' ' || *_input == '\t' || *_input == '\n') {
@@ -126,7 +126,7 @@ JSONArray* parse_array(char** input) {
             }
             result->array_size = result->array_size + 1;
             result->array[result->array_size - 1] = parsed_integer;
-            result->array_type[result->array_size - 1] = 0;
+            result->array_type[result->array_size - 1] = Integer;
         }
 
         if (*_input == '\"') {
@@ -139,7 +139,7 @@ JSONArray* parse_array(char** input) {
             }
             result->array_size = result->array_size + 1;
             result->array[result->array_size - 1] = parsed_string;
-            result->array_type[result->array_size - 1] = 1;
+            result->array_type[result->array_size - 1] = String;
         }
         if (*_input == ']') {
             break;
@@ -158,10 +158,10 @@ void print_json_object(JSONObject* object) {
         switch (field->type) {
             // We don't use other types in this project, and we can be lazy
             // So we don't implement boolean or doubles or int print
-            case 0:
+            case String:
                 printf("\"%s\"", field->value.string);
                 break;
-            case 2:
+            case Array:
                 print_json_array(field->value.array);
                 break;
             default:
@@ -176,20 +176,118 @@ void print_json_object(JSONObject* object) {
 
 void print_json_array(JSONArray* array) {
     printf("[ ");
+    if (array->array_size != 0) {
+        for (int i = 0; i < array->array_size; i++) {
+            switch (array->array_type[i]) {
+                case Integer:
+                    printf("%d", *((int *) array->array[i]));
+                    break;
+                case String:
+                    printf("\"%s\"", (char *) array->array[i]);
+                    break;
+                default:
+                    break;
+            }
+            if (i != (array->array_size - 1)) {
+                printf(", ");
+            }
+        }
+    }
+    printf(" ]");
+}
+
+JSONField* get_value(JSONObject* object, char* key) {
+    for (int i = 0; i < object->nb_field; i++) {
+        if (strcmp(key, object->fields[i]->key) == 0) {
+            return object->fields[i];
+        }
+    }
+    return NULL;
+}
+
+
+JSONArray* create_array() {
+    JSONArray *result = malloc(sizeof(JSONArray));
+    result->array = malloc(sizeof(void*) * MAX_ARRAY_SIZE);
+    result->array_type = malloc(sizeof(JSONType) * MAX_ARRAY_SIZE);
+    return result;
+}
+
+JSONObject* create_json_object(char* code, JSONArray* arguments) {
+    JSONObject* object = malloc(sizeof(JSONObject));
+    
+    JSONField* _code = malloc(sizeof(JSONField));
+    JSONField* _arguments = malloc(sizeof(JSONField));
+    
+    object->fields = malloc(sizeof(JSONField) * MAX_JSON_FIELDS);
+
+    _code->key = "code";
+    _code->type = String;
+    _code->value.string = code;
+
+    _arguments->key = "valeurs";
+    _arguments->type = Array;
+    _arguments->value.array = arguments;
+
+    object->nb_field = 2;
+    object->fields[0] = _code;
+    object->fields[1] = _arguments;
+
+    return object;
+}
+
+void insert_str_into_array(char* str, JSONArray* array) {
+    array->array_size += 1;
+    array->array[array->array_size - 1] = str;
+    array->array_type[array->array_size - 1] = String;
+}
+
+void insert_int_into_array(int* integer, JSONArray* array) {
+    array->array_size += 1;
+    array->array[array->array_size - 1] = integer;
+    array->array_type[array->array_size - 1] = String;
+}
+
+void convert_to_data(char* data, JSONObject* object) {
+    sprintf(data + strlen(data), "{");
+    for (int i = 0; i < object->nb_field; i++) {
+        JSONField *field = object->fields[i];
+        sprintf(data + strlen(data), "\"%s\":", field->key);
+        switch (field->type) {
+            // We don't use other types in this project, and we can be lazy
+            // So we don't implement boolean or doubles or int print
+            case String:
+                sprintf(data + strlen(data), "\"%s\"", field->value.string);
+                break;
+            case Array:
+                convert_json_array_to_data(data, field->value.array);
+                break;
+            default:
+                break;
+        }
+        if (i != (object->nb_field - 1)) {
+            sprintf(data + strlen(data), ",");
+        }
+    }
+    sprintf(data + strlen(data), "}");
+}
+
+void convert_json_array_to_data(char* data, JSONArray* array) {
+    sprintf(data + strlen(data), "[");
     for (int i = 0; i < array->array_size; i++) {
         switch(array->array_type[i]) {
-            case 0:
-                printf("%d", *((int *) array->array[i]));
+            case Integer:
+                sprintf(data + strlen(data), "%d", *((int *) array->array[i]));
                 break;
-            case 1:
-                printf("\"%s\"", (char *) array->array[i]);
+            case String:
+                sprintf(data + strlen(data), "\"%s\"", (char *) array->array[i]);
                 break;
             default:
                 break;
         }
         if (i != (array->array_size - 1)) {
-            printf(", ");
+            printf(",");
         }
     }
-    printf(" ]");
+    sprintf(data + strlen(data), "]");
 }
