@@ -5,7 +5,8 @@
  *
  */
 /*
- * Code permettant de stocker différents types de couleurs : format 24 bits (RGB) ou format 32 bits (32). 
+ * Code permettant de stocker différents types de couleurs : format 24 bits
+ * (RGB) ou format 32 bits (32).
  */
 
 #ifndef __COLOR_H__
@@ -14,16 +15,11 @@
 #include <stdint.h>
 
 // Compte de bits (24 bits, 32 bits..)
-typedef enum COMPTEBIT
-{
-  BITS24,
-  BITS32
-} COMPTEBIT;
+typedef enum COMPTEBIT { BITS24, BITS32 } COMPTEBIT;
 
 // Structure de données d'une couleur de 32 bits
 #pragma pack(push, 1)
-typedef struct
-{
+typedef struct {
   uint8_t bleu;
   uint8_t vert;
   uint8_t rouge;
@@ -33,8 +29,7 @@ typedef struct
 
 // Structure de données d'une couleur de 24 bits
 #pragma pack(push, 1)
-typedef struct
-{
+typedef struct {
   uint8_t bleu;
   uint8_t vert;
   uint8_t rouge;
@@ -42,11 +37,9 @@ typedef struct
 #pragma pack(pop)
 
 // Structure de données d'un couleurs de 24/32 bits
-typedef struct
-{
+typedef struct {
   COMPTEBIT compte_bit;
-  union
-  {
+  union {
     couleur24 *c24;
     couleur32 *c32;
   } c;
@@ -54,25 +47,21 @@ typedef struct
 } couleur;
 
 // Structure de données de compteur de couleurs de 32 bits
-typedef struct
-{
+typedef struct {
   couleur32 c;
   int compte;
 } couleur32_compteur;
 
 // Structure de données de compteur de couleurs de 24 bits
-typedef struct
-{
+typedef struct {
   couleur24 c;
   int compte;
 } couleur24_compteur;
 
 // Structure de données de compteur de couleurs de 24/32 bits
-typedef struct
-{
+typedef struct {
   COMPTEBIT compte_bit;
-  union
-  {
+  union {
     couleur24_compteur *cc24;
     couleur32_compteur *cc32;
   } cc;

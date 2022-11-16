@@ -31,4 +31,4 @@ $(CLIENT): $(COBJS)
 
 
 clean:
-	rm -rf *.o $(SERVER) $(CLIENT) colors
+	rm -rf *.o $(SERVER) $(CLIENT) colors tags
