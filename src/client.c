@@ -67,6 +67,8 @@ int envoie_recois_message(int socketfd, Protocol protocol)
   fgets(message, sizeof(message), stdin);
   message[strlen(message) - 1] = '\0';
   sprintf(data, "%d\n", protocol);
+
+  // We check which protocol we're using, and format it accordingly
   if (protocol == Text) {
     sprintf(data + strlen(data), "message: ");
     sprintf(data + strlen(data), "%s", message);
@@ -148,13 +150,15 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operato
   double resultat;
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
+
+  sprintf(data, "%d\n", protocol);
   if (protocol == Text) {
-    sprintf(data, "calcul: ");
-    sprintf(data, "%s", operator);
-    sprintf(data, "%s", " ");
-    sprintf(data, "%s", operand1);
-    sprintf(data, "%s", " ");
-    sprintf(data, "%s", operand2);
+    sprintf(data + strlen(data), "calcul: ");
+    sprintf(data + strlen(data), "%s", operator);
+    sprintf(data + strlen(data), "%s", " ");
+    sprintf(data + strlen(data), "%s", operand1);
+    sprintf(data + strlen(data), "%s", " ");
+    sprintf(data + strlen(data), "%s", operand2);
   } else if (protocol == JSON) {
     JSONArray* arguments = create_array();
     insert_str_into_array(operator, arguments);
@@ -232,6 +236,7 @@ int envoie_balises(int socketfd, Protocol protocol, char* arg) {
             tags[i] = malloc(MAX_TAG_SIZE * sizeof(char));
             printf("Veuillez rentrer le tag numéro %d -> ", i + 1);
             fgets(tags[i], MAX_TAG_SIZE, stdin);
+            tags[i][strlen(tags[i]) - 1] = '\0'; 
             printf("\n");
         }
     }
@@ -246,8 +251,9 @@ int envoie_balises_socket(int socketfd, Protocol protocol, int nb_balises, char*
     char data[1024];
     char buffer[256];
     memset(data, 0, sizeof(data));
+    sprintf(data, "%d\n", protocol);
     if (protocol == Text) {
-      strcpy(data, "balises: ");
+      strcat(data, "balises: ");
       sprintf(buffer, "%d,", nb_balises);
       strcat(data, buffer);
 

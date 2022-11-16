@@ -105,9 +105,12 @@ int renvoie_calcul(int client_socket_fd, char *data)
   char operator;
   double operand1;
   double operand2;
+  printf("%s\n", data);
 
   sscanf(data, "%*s %s %lf %lf", &operator, &operand1, &operand2);
+
   if (strcmp(&operator, "+") == 0) {
+    printf("addition\n");
     result = operand1 + operand2;
   } else if (strcmp(&operator, "-") == 0) {
     result = operand1 - operand2;
@@ -164,19 +167,27 @@ int recois_envoie_message(int socketfd)
   }
 
   printf("Full message -> %s\n", data);
-  // Extract protocol
-  sscanf(data, "%d\n%s", (int *) &protocol, data);
+  // Separate protocol and data
+  sscanf(data, "%d\n%[^\n]", (int *) &protocol, data);
 
   /*
    * extraire le code des données envoyées par le client.
-   * Les données envoyées par le client peuvent commencer par le mot "message :" ou un autre mot.
+   * Les données envoyées par le client peuvent commencer par le mot "message: " ou un autre mot.
    */
   printf("Protocole : %d\n", protocol);
   printf("Message recu: %s\n", data);
+  
   if (protocol == JSON) {
       object = parse_json(data);
-      json_to_text(object, data);
-      printf("Converted data -> %s\n", data);
+      // TODO: because of protocol specifications inconcistencies, we need a special conversion to Text format for calcul operations...
+      // calcul operation doesn't have commas separated values ¯\_(ツ)_/¯ 
+      // (see https://github.com/johnsamuelwrites/AlgoC/blob/master/Projet/partie1.md#c-calcul vs https://github.com/johnsamuelwrites/AlgoC/blob/master/Projet/partie1.md#e-balises)
+      if (strcmp( (char *) object->fields[0]->value.string, "calcul") == 0) {
+        json_to_text_calcul(object, data);
+      } else {
+        json_to_text(object, data);
+        printf("Converted data -> %s\n", data);
+      }
   }
   char code[10];
   sscanf(data, "%s", code);
