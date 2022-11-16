@@ -6,8 +6,8 @@
  */
 
 /*
- * Le code côté serveur. L'objectif principal est de recevoir des messages des clients,
- * de traiter ces messages et de répondre aux clients.
+ * Le code côté serveur. L'objectif principal est de recevoir des messages des
+ * clients, de traiter ces messages et de répondre aux clients.
  */
 
 #ifndef __SERVER_H__
@@ -19,8 +19,8 @@
  * envoyées par le client. En suite, le serveur envoie un message
  * en retour
  */
-int recois_envoie_message (int socketfd);
+int recois_envoie_message(int socketfd);
 
-int recois_balises (char *data);
+int recois_balises(char *data);
 
 #endif

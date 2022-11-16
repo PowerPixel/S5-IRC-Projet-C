@@ -6,6 +6,6 @@
  *
  */
 
-/* 
+/*
  * Code pour traiter différents types d'opérations mathématiques
  */

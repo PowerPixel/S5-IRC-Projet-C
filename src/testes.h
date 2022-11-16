@@ -6,7 +6,7 @@
  *
  */
 
-/* 
+/*
  * L'objectif principal de ce code est d'effectuer des tests unitaires et
  *  fonctionnels sur les différents composants créés dans ce projet.
  */
