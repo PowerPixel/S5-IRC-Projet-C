@@ -109,7 +109,6 @@ int renvoie_calcul(char *data, double* result) {
 
   // Simple verification of operand
   if (strcmp(&operator, "+") == 0) {
-    printf("addition\n");
     *result = operand1 + operand2;
   } else if (strcmp(&operator, "-") == 0) {
     *result = operand1 - operand2;
@@ -158,7 +157,6 @@ int recois_envoie_message(int socketfd)
     return (EXIT_FAILURE);
   }
 
-  printf("Full message -> %s\n", data);
   // Separate protocol and data
   sscanf(data, "%d\n%[^\n]", (int *) &protocol, data);
 
@@ -166,7 +164,6 @@ int recois_envoie_message(int socketfd)
    * extraire le code des données envoyées par le client.
    * Les données envoyées par le client peuvent commencer par le mot "message: " ou un autre mot.
    */
-  printf("Protocole : %d\n", protocol);
   printf("Message recu: %s\n", data);
   
   if (protocol == JSON) {
@@ -178,7 +175,6 @@ int recois_envoie_message(int socketfd)
         json_to_text_calcul(object, data);
       } else {
         json_to_text(object, data);
-        printf("Converted data -> %s\n", data);
       }
   }
   char code[10];
@@ -214,6 +210,7 @@ int recois_envoie_message(int socketfd)
     double result = 0.0;
     char resultat[MAX_STRING_SIZE];
     renvoie_calcul(data, &result);
+    memset(data, 0, sizeof(data));
 
     if (protocol == JSON) {
       JSONArray* args = create_array();
@@ -227,9 +224,9 @@ int recois_envoie_message(int socketfd)
 
     renvoie_message(client_socket_fd, data);
   } else if (strcmp(code, "balises:") == 0) {
-      recois_balises(data);
-
-      if (protocol == JSON) {
+    recois_balises(data);
+    memset(data, 0, sizeof(data));
+    if (protocol == JSON) {
         JSONArray* args = create_array();
         insert_str_into_array("enregistrées", args);
         JSONObject* _object = create_json_object("balises", args);
@@ -242,6 +239,8 @@ int recois_envoie_message(int socketfd)
   } else
   {
     plot(data);
+    memset(data, 0, sizeof(data));
+
     if (protocol == JSON) {
       JSONArray* args = create_array();
       insert_str_into_array("enregistrées", args);

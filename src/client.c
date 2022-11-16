@@ -80,7 +80,6 @@ int envoie_recois_message(int socketfd, Protocol protocol)
     convert_to_data(data, object);
   }
 
-  printf("\ndata : %s\n", data);
   int write_status = write(socketfd, data, strlen(data));
   if (write_status < 0)
   {
@@ -176,7 +175,6 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operato
     JSONObject* object = create_json_object("calcul", arguments);
 
     convert_to_data(data, object);
-    printf("Converted data -> %s\n", data);
   }
   
 
@@ -199,7 +197,7 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operato
     return -1;
   }
 
-  printf("%s\n", resultat);
+  printf("Message recu: %s\n", resultat);
 
   return 0;
 }
@@ -296,7 +294,7 @@ int envoie_balises_socket(int socketfd, Protocol protocol, int nb_balises, char*
         return -1;
     }
 
-    printf("%s\n", data);
+    printf("Message recu: %s\n", data);
 
     return 0;
 }
@@ -344,7 +342,7 @@ void analyse(char *pathname, Protocol protocol, char *data, int nb_colors_to_plo
     {
       if (protocol == Text) {
         sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
-          sprintf(data + strlen(data),"%s", temp_string);
+        sprintf(data + strlen(data),"%s", temp_string);
       } else if (protocol == JSON) {
         char* string = malloc(sizeof(char) * 8); // 8 chars (7 for colors, 1 for the 0 of ending string)
         sprintf(string, "#%02x%02x%02x", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
@@ -355,7 +353,6 @@ void analyse(char *pathname, Protocol protocol, char *data, int nb_colors_to_plo
 
   if (protocol == JSON) {
     JSONObject* object = create_json_object("couleurs", array);
-
     convert_to_data(data, object);
   }
   if (protocol == Text) {
@@ -398,7 +395,7 @@ int envoie_couleurs(int socketfd, Protocol protocol, char *pathname, char* nb_co
     return -1;
   }
 
-  printf("%s\n", data);
+  printf("Message recu: %s\n", data);
 
   return 0;
 }
