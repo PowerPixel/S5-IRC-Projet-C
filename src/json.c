@@ -210,6 +210,7 @@ JSONArray* create_array() {
     JSONArray *result = malloc(sizeof(JSONArray));
     result->array = malloc(sizeof(void*) * MAX_ARRAY_SIZE);
     result->array_type = malloc(sizeof(JSONType) * MAX_ARRAY_SIZE);
+    result->array_size = 0;
     return result;
 }
 

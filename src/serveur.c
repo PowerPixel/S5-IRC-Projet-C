@@ -94,38 +94,30 @@ int renvoie_message(int client_socket_fd, char *data)
   return (EXIT_SUCCESS);
 }
 
-/* renvoyer un message (*data) au client (client_socket_fd)
+/*
+ * renvoyer un message (*data) au client (client_socket_fd)
  */
-int renvoie_calcul(int client_socket_fd, char *data)
-{
 
-  double result;
-  // Lecture et interprétation de l'opérande
-
+// TODO: We are aware that this command is not 100% compliant to the spec, we'll be working on it :)
+int renvoie_calcul(char *data, double* result) {
   char operator;
   double operand1;
   double operand2;
-  printf("%s\n", data);
 
+  // Reading and interpreting operators and operands
   sscanf(data, "%*s %s %lf %lf", &operator, &operand1, &operand2);
 
+  // Simple verification of operand
   if (strcmp(&operator, "+") == 0) {
     printf("addition\n");
-    result = operand1 + operand2;
+    *result = operand1 + operand2;
   } else if (strcmp(&operator, "-") == 0) {
-    result = operand1 - operand2;
+    *result = operand1 - operand2;
   } else if (strcmp(&operator, "/") == 0) {
-    result = operand1 / operand2;
+    *result = operand1 / operand2;
   } else if (strcmp(&operator, "*") == 0) {
-    result = operand1 * operand2;
+    *result = operand1 * operand2;
   } else {
-    return (EXIT_FAILURE);
-  }
-
-  int data_size = write(client_socket_fd, (void *)&result, sizeof(double));
-
-  if (data_size < 0) {
-    perror("erreur calcul !!!!!!");
     return (EXIT_FAILURE);
   }
 
@@ -191,20 +183,72 @@ int recois_envoie_message(int socketfd)
   }
   char code[10];
   sscanf(data, "%s", code);
+  int isMessage = strcmp(code, "message:") == 0;
+  int isNom = strcmp(code, "nom:") == 0;
 
-  // Si le message commence par le mot: 'message:'
-  if (strcmp(code, "message:") == 0 || strcmp(code, "nom:") == 0)
+  // If the command is message or name, we just need to echo back to the client
+  if (isMessage || isNom)
   {
+    // Protocol based data processing, need a protocol check
+    if (protocol == JSON) {
+      JSONObject* _object = NULL;
+      JSONArray* args = create_array();
+      char resultat[MAX_STRING_SIZE];
+      sscanf(data, "%*s %s", resultat);
+      memset(data, 0, sizeof(data));
+      insert_str_into_array(resultat, args);
+
+      // We need to put a code based on the command
+      if (isNom) {
+        _object = create_json_object("nom", args);
+      } else if (isMessage) {
+        _object = create_json_object("message", args);
+      }
+
+      // Turn the JSON Object into a string
+      convert_to_data(data, _object);
+    }
+    // sends the message back to the client
     renvoie_message(client_socket_fd, data);
   } else if (strcmp(code, "calcul:") == 0) {
-    renvoie_calcul(client_socket_fd, data);
+    double result = 0.0;
+    char resultat[MAX_STRING_SIZE];
+    renvoie_calcul(data, &result);
+
+    if (protocol == JSON) {
+      JSONArray* args = create_array();
+      sprintf(resultat, "%lf", result);
+      insert_str_into_array(resultat, args);
+      JSONObject* _object = create_json_object("calcul", args);
+      convert_to_data(data, _object);
+    } else {
+      sprintf(data, "calcul: %lf", result);
+    }
+
+    renvoie_message(client_socket_fd, data);
   } else if (strcmp(code, "balises:") == 0) {
       recois_balises(data);
-      renvoie_message(client_socket_fd, "balises: enregistré");
+
+      if (protocol == JSON) {
+        JSONArray* args = create_array();
+        insert_str_into_array("enregistrées", args);
+        JSONObject* _object = create_json_object("balises", args);
+        convert_to_data(data, _object);
+        renvoie_message(client_socket_fd, data);
+      } else {
+        renvoie_message(client_socket_fd, "balises: enregistrées");
+      }
+
   } else
   {
     plot(data);
-    renvoie_message(client_socket_fd, "couleurs: enregistré");
+    if (protocol == JSON) {
+      JSONArray* args = create_array();
+      insert_str_into_array("enregistrées", args);
+      JSONObject* _object = create_json_object("couleurs", args);
+      convert_to_data(data, _object);
+    }
+    renvoie_message(client_socket_fd,  data);
   }
 
   // fermer le socket

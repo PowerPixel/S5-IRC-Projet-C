@@ -147,7 +147,7 @@ int envoie_recois_hostname(int socketfd, Protocol protocol) {
 
 int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operator, char* operand1, char* operand2) {
   char data[MAX_HOSTNAME_SIZE];
-  double resultat;
+  char resultat[MAX_HOSTNAME_SIZE];
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
 
@@ -192,14 +192,14 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol, char* operato
   memset(data, 0, sizeof(data));
 
   // lire les données de la socket
-  int read_status = read(socketfd, (void *) &resultat, sizeof(resultat));
+  int read_status = read(socketfd, resultat, sizeof(resultat));
   if (read_status < 0)
   {
     perror("erreur lecture resultat");
     return -1;
   }
 
-  printf("calcul: %lf\n", resultat);
+  printf("%s\n", resultat);
 
   return 0;
 }
@@ -316,11 +316,11 @@ void analyse(char *pathname, Protocol protocol, char *data, int nb_colors_to_plo
 
   // If the protocol is text, we need specific headers
   if (protocol == Text) {
-    sprintf(data, "couleurs: ");
+    sprintf(data + strlen(data), "couleurs: ");
     sprintf(temp_string, "%d,", nb_colors_to_plot);
-    sprintf(data, "%s",temp_string);
+    sprintf(data + strlen(data), "%s",temp_string);
   } else if (protocol == JSON) {
-    array = malloc(sizeof(JSONArray));
+    array = create_array();
     int *nb_colors = malloc(sizeof(int));
     memcpy(nb_colors, &nb_colors_to_plot, sizeof(int));
     insert_int_into_array(nb_colors, array);
@@ -333,6 +333,7 @@ void analyse(char *pathname, Protocol protocol, char *data, int nb_colors_to_plo
     {
       if (protocol == Text) {
         sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
+        sprintf(data + strlen(data),"%s", temp_string);
       } else if (protocol == JSON) {
         char* string = malloc(sizeof(char) * 8); // 8 chars (7 for colors, 1 for the 0 of ending string)
         sprintf(string, "#%02x%02x%02x", cc->cc.cc32[cc->size - count].c.rouge, cc->cc.cc32[cc->size - count].c.vert, cc->cc.cc32[cc->size - count].c.bleu);
@@ -343,14 +344,12 @@ void analyse(char *pathname, Protocol protocol, char *data, int nb_colors_to_plo
     {
       if (protocol == Text) {
         sprintf(temp_string, "#%02x%02x%02x,", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
+          sprintf(data + strlen(data),"%s", temp_string);
       } else if (protocol == JSON) {
         char* string = malloc(sizeof(char) * 8); // 8 chars (7 for colors, 1 for the 0 of ending string)
         sprintf(string, "#%02x%02x%02x", cc->cc.cc24[cc->size - count].c.rouge, cc->cc.cc24[cc->size - count].c.vert, cc->cc.cc24[cc->size - count].c.bleu);
         insert_str_into_array(string, array);
       }
-    }
-    if (protocol == Text) {
-      sprintf(data, "%s", temp_string);
     }
   }
 
