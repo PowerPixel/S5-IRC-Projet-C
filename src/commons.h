@@ -4,9 +4,10 @@
 #ifndef COMMONS_H
 #define COMMONS_H
 
-typedef enum {
-    Text,
-    JSON
+typedef enum
+{
+  Text,
+  JSON
 } Protocol;
 
 #endif

@@ -80,15 +80,15 @@ typedef struct
 } couleur_compteur;
 
 // compter les couleurs distincts
-couleur_compteur *compte_couleur(couleur *, int);
+couleur_compteur *compte_couleur (couleur *, int);
 
 // afficher les couleurs
-void print_couleur(couleur *, int);
+void print_couleur (couleur *, int);
 
 // afficher le compte de couleurs distincts
-void print_couleur_compteur(couleur_compteur *);
+void print_couleur_compteur (couleur_compteur *);
 
 // trier le compte de couleurs distincts
-void trier_couleur_compteur(couleur_compteur *);
+void trier_couleur_compteur (couleur_compteur *);
 
 #endif
