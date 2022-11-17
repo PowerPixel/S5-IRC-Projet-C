@@ -15,14 +15,21 @@ Aucune librairie n'a été utilisée pour l'instant
 
 # Commentaires
 
+## Ajout du champ protocole dans les messages
+
+En prévision de la tâche 4 et dans un soucis d'efficacité, tous les messages que le client envoie au serveur sont désormais débutés par une séquence `%d\n`. Cette
+séquence permet au serveur d'identifier le protocole de communication du client et de lui répondre en fonction de celui-ci
+
 ## <u>Comment utiliser le code</u>
 
 Lancer le serveur dans un teminale à l'aide de la commande ```./serveur```
 
-Ensuite dans un sceond terminal il faut lancer la commande ```./client` <type_d'echange> <fonction_requise> <potentielle_arguments>```
+Ensuite dans un second terminal il faut lancer la commande ```./client` <type_d'echange> <fonction_requise> <potentielle_arguments>```
+
+Vous pouvez retrouver la syntaxe en tapant simplement `./client`
 
 ### Type d'échange
-* si ont souhaite que le serveur communique en json il suffit d'écire ```--json``` dans le cas contraire, ne rien écire.
+* Si l'on souhaite que la communication client <-> serveur se fasse en json il suffit de passer `--json` en premier paramètre depuis le client. Dans le cas contraire, ne rien écire.
 
 ### Fonctions et arguments
 
