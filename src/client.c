@@ -107,8 +107,8 @@ int envoie_recois_hostname(int socketfd, Protocol protocol) {
   memset(data, 0, sizeof(data));
   sprintf(data, "%d\n", protocol);
   if (protocol == Text) {
-    sprintf(data, "nom: ");
-    sprintf(data, "%s", get_hostname());
+    sprintf(data + strlen(data), "nom: ");
+    sprintf(data + strlen(data), "%s", get_hostname());
   } else if (protocol == JSON) {
     JSONArray *arguments = create_array();
     insert_str_into_array(get_hostname(), arguments);
