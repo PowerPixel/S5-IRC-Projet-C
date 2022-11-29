@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "commons.h"
 #include "json.h"
@@ -91,18 +92,10 @@ int renvoie_message(int client_socket_fd, char *data) {
 }
 
 
-float* tri_a_bulle(float tab[],int size)
+void tri_a_bulle(float tab[],int size)
 {
-  // int tab[10] = { 4, -1, 8, 12, -6, 23, 2, 28, 24, 33};
-  int i, j, tmp;
-
-    //afficher les éléments du tableau
-  for (i=0; i < size; ++i)
-  {
-      // tab[i] = atof(tab[i]);
-      printf("%lf \n", tab[i]);
-  }
-
+  int i, j;
+  float tmp;
   for (i=0 ; i < size-1; i++)
   {
     for (j=0 ; j < size-i-1; j++)
@@ -116,17 +109,38 @@ float* tri_a_bulle(float tab[],int size)
       }
     }
   }
+}
 
-    printf("\n******* tableau triée par ordre croissant *******\n");
-  
-      //afficher les éléments du tableau triée
-    for (i=0; i < size; ++i)
-    {
-        printf("%lf \n", tab[i]);
-    }
-  
-    return tab;
+float moyenne(float tab[],int size)
+{
+  float tmp = 0.0;
+  for (int i=0 ; i < size; i++)
+  {
+    tmp = tmp + tab[i];
   }
+  tmp = (float)tmp/(float)(size);
+  return tmp;
+}
+
+float ecart_type (float tab[],int size) {
+
+float moyenne_des_carre = 0.0 ;
+float carre_de_moyenne = 0.0;
+double tmp = 0.0;
+
+  carre_de_moyenne = moyenne(tab,size) * moyenne(tab,size);
+
+  for (int i=0 ; i < size; i++)
+  {
+    moyenne_des_carre = moyenne_des_carre + tab[i] * tab[i] ;
+  }
+  moyenne_des_carre = (float)moyenne_des_carre/(float)(size);
+
+  tmp = moyenne_des_carre - carre_de_moyenne;
+  tmp = sqrt(tmp);
+  return tmp;
+
+}
 
 /*
  * renvoyer un message (*data) au client (client_socket_fd)
@@ -135,12 +149,14 @@ float* tri_a_bulle(float tab[],int size)
 // TODO: We are aware that this command is not 100% compliant to the spec, we'll
 // be working on it :)
 int renvoie_calcul(char *data, double *result) {
-  char operator;
+  char operator[10];
   double operand1;
   double operand2;
   char * copy = malloc(strlen(data) + 1); 
   float tab[MAX_ARRAY_SIZE];
-  // (double**) malloc (MAX_ARRAY_SIZE);
+  float moy;
+  float ecart_type_result;
+
   strcpy(copy, data);
 
   char *delim = " ";
@@ -155,7 +171,7 @@ int renvoie_calcul(char *data, double *result) {
           {
             if (count > 2 ){
               tab[count-3] = atof(token); 
-              printf("tableau[%d] => %lf \n", count-3,tab[count-3]);
+              // printf("tableau[%d] => %lf \n", count-3,tab[count-3]);
             }
             
             // printf("Token no. %d : %s \n", count,token);
@@ -165,23 +181,28 @@ int renvoie_calcul(char *data, double *result) {
   free(copy);
   tri_a_bulle(tab,count-3);
 
-  
-  // for (int i=0; i < count; i++) {
-  //   printf("tableau %d valeur %s \n", i,tab[i]);
-  // }
-
   // Reading and interpreting operators and operands
-  sscanf(data, "%*s %s %lf %lf", &operator, & operand1, & operand2);
+  sscanf(data, "%*s %s %lf %lf", operator, & operand1, & operand2);
 
   // Simple verification of operand
-  if (strcmp(&operator, "+") == 0) {
+  if (strcmp(operator, "+") == 0) {
     *result = operand1 + operand2;
-  } else if (strcmp(&operator, "-") == 0) {
+  } else if (strcmp(operator, "-") == 0) {
     *result = operand1 - operand2;
-  } else if (strcmp(&operator, "/") == 0) {
+  } else if (strcmp(operator, "/") == 0) {
     *result = operand1 / operand2;
-  } else if (strcmp(&operator, "*") == 0) {
+  } else if (strcmp(operator, "*") == 0) {
     *result = operand1 * operand2;
+  } else if (strcmp(operator, "minimum") == 0) {
+    *result = tab[0];
+  } else if (strcmp(operator, "maximum") == 0) {
+    *result = tab[count-4];
+  } else if (strcmp(operator, "moyenne") == 0) {
+    moy = moyenne(tab,count-3);
+    *result = moy;
+  } else if (strcmp(operator, "ecart-type") == 0) {
+    ecart_type_result = ecart_type(tab,count-3);
+    *result = ecart_type_result;
   } else {
     return (EXIT_FAILURE);
   }
