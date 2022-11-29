@@ -480,8 +480,15 @@ int main(int argc, char **argv) {
   }
 
   if (strcmp(argv[1], "calcul") == 0) {
-    envoie_calcul_recois_resultat(socketfd, parse_mode, argv[2], argv[3],
+      // if (strcmp(argv[2], "minimum") == 0 || strcmp(argv[2], "moyenne") == 0 ||
+      // strcmp(argv[2], "maximum") == 0 || strcmp(argv[2], "écart-type") == 0){
+      //   printf("nb argument %d",argc);
+      // }
+      // else {
+      envoie_calcul_recois_resultat(socketfd, parse_mode, argv[2], argv[3],
                                   argv[4]);
+      // }
+    
   }
 
   if (strcmp(argv[1], "balises") == 0) {

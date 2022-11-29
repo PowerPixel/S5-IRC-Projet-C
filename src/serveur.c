@@ -90,6 +90,44 @@ int renvoie_message(int client_socket_fd, char *data) {
   return (EXIT_SUCCESS);
 }
 
+
+float* tri_a_bulle(float tab[],int size)
+{
+  // int tab[10] = { 4, -1, 8, 12, -6, 23, 2, 28, 24, 33};
+  int i, j, tmp;
+
+    //afficher les éléments du tableau
+  for (i=0; i < size; ++i)
+  {
+      // tab[i] = atof(tab[i]);
+      printf("%lf \n", tab[i]);
+  }
+
+  for (i=0 ; i < size-1; i++)
+  {
+    for (j=0 ; j < size-i-1; j++)
+    {
+      /* Pour un ordre décroissant utiliser < */
+      if (tab[j] > tab[j+1]) 
+      {
+        tmp = tab[j];
+        tab[j] = tab[j+1];
+        tab[j+1] = tmp;
+      }
+    }
+  }
+
+    printf("\n******* tableau triée par ordre croissant *******\n");
+  
+      //afficher les éléments du tableau triée
+    for (i=0; i < size; ++i)
+    {
+        printf("%lf \n", tab[i]);
+    }
+  
+    return tab;
+  }
+
 /*
  * renvoyer un message (*data) au client (client_socket_fd)
  */
@@ -100,6 +138,37 @@ int renvoie_calcul(char *data, double *result) {
   char operator;
   double operand1;
   double operand2;
+  char * copy = malloc(strlen(data) + 1); 
+  float tab[MAX_ARRAY_SIZE];
+  // (double**) malloc (MAX_ARRAY_SIZE);
+  strcpy(copy, data);
+
+  char *delim = " ";
+  unsigned count = 0;
+  /* First call to strtok should be done with string and delimiter as first and second parameter*/
+  char *token = strtok(copy,delim);
+  count++;
+
+  /* Consecutive calls to the strtok should be with first parameter as NULL and second parameter as delimiter
+    * * return value of the strtok will be the split string based on delimiter*/
+  while(token != NULL)
+          {
+            if (count > 2 ){
+              tab[count-3] = atof(token); 
+              printf("tableau[%d] => %lf \n", count-3,tab[count-3]);
+            }
+            
+            // printf("Token no. %d : %s \n", count,token);
+            token = strtok(NULL,delim);
+            count++;
+          }
+  free(copy);
+  tri_a_bulle(tab,count-3);
+
+  
+  // for (int i=0; i < count; i++) {
+  //   printf("tableau %d valeur %s \n", i,tab[i]);
+  // }
 
   // Reading and interpreting operators and operands
   sscanf(data, "%*s %s %lf %lf", &operator, & operand1, & operand2);
