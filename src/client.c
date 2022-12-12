@@ -146,6 +146,8 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol,
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
 
+
+
   sprintf(data, "%d\n", protocol);
   if (protocol == Text) {
     sprintf(data + strlen(data), "calcul: ");
@@ -480,15 +482,23 @@ int main(int argc, char **argv) {
   }
 
   if (strcmp(argv[1], "calcul") == 0) {
-      // if (strcmp(argv[2], "minimum") == 0 || strcmp(argv[2], "moyenne") == 0 ||
-      // strcmp(argv[2], "maximum") == 0 || strcmp(argv[2], "écart-type") == 0){
-      //   envoie_calcul_recois_resultat(socketfd, parse_mode, argv[2], argv[3],
-      //                             argv[4]);
-      // }
-      // else {
+      if (strcmp(argv[2], "minimum") == 0 || strcmp(argv[2], "moyenne") == 0 ||
+      strcmp(argv[2], "maximum") == 0 || strcmp(argv[2], "écart-type") == 0){
+        char allNumber[500];
+        for(int i=3; i < argc; i++){
+          strcat(allNumber, argv[i]);
+          if(i+1 != argc){
+            strcat(allNumber, ",");
+          }
+        }
+
+        envoie_calcul_recois_resultat(socketfd, parse_mode, argv[2], "null",
+                                  allNumber);
+      }
+      else {
       envoie_calcul_recois_resultat(socketfd, parse_mode, argv[2], argv[3],
                                   argv[4]);
-      // }
+      }
     
   }
 
