@@ -170,12 +170,12 @@ int renvoie_calcul(char *data, double *result) {
     * * return value of the strtok will be the split string based on delimiter*/
   while(token != NULL)
           {
-            if(strcmp(operator, "minimum") || strcmp(operator, "maximum") || strcmp(operator, "moyenne") || strcmp(operator, "ecart-type") ){
-              if(count > 3 ){
-                tmpTab[0] = token;
-              }
-            }
-            else if (count > 2 ){
+            // if(strcmp(operator, "minimum") == 0|| strcmp(operator, "maximum") == 0 || strcmp(operator, "moyenne") == 0 || strcmp(operator, "ecart-type") ){
+            //   if(count > 3 ){
+            //     tmpTab[0] = token;
+            //   }
+            // }
+            /* else*/ if (count > 2 ){
                 tab[count-3] = atof(token); 
                 // printf("tableau[%d] => %lf \n", count-3,tab[count-3]);
               }
@@ -185,22 +185,22 @@ int renvoie_calcul(char *data, double *result) {
           }
   free(copy);
 
-  if(strcmp(operator, "minimum") || strcmp(operator, "maximum") || strcmp(operator, "moyenne") || strcmp(operator, "ecart-type") ){
-    char *delim2 = ",";
-    unsigned count2 = 0;
-    /* First call to strtok should be done with string and delimiter as first and second parameter*/
-    char *token2 = strtok(tmpTab[0],delim2);
-    count2++;
-    while(token2 != NULL)
-            {
-              // printf("Token no. %d : %s \n", count2,token2);
-              tab[count2-1] = atof(token2);
-              token2 = strtok(NULL,delim2);
-              count2++;
-            }
-    tri_a_bulle(tab,count2-1); 
-  }
-  else { tri_a_bulle(tab,count-3); }
+  // if(strcmp(operator, "minimum") || strcmp(operator, "maximum") || strcmp(operator, "moyenne") || strcmp(operator, "ecart-type") ){
+  //   char *delim2 = ",";
+  //   unsigned count2 = 0;
+  //   /* First call to strtok should be done with string and delimiter as first and second parameter*/
+  //   char *token2 = strtok(tmpTab[0],delim2);
+  //   count2++;
+  //   while(token2 != NULL)
+  //           {
+  //             // printf("Token no. %d : %s \n", count2,token2);
+  //             tab[count2-1] = atof(token2);
+  //             token2 = strtok(NULL,delim2);
+  //             count2++;
+  //           }
+  //   tri_a_bulle(tab,count2-1); 
+  // }
+  /*else { */tri_a_bulle(tab,count-3); /*}*/
 
   // Reading and interpreting operators and operands
   sscanf(data, "%*s %s %lf %lf", operator, & operand1, & operand2);
@@ -322,7 +322,7 @@ int recois_envoie_message(int socketfd) {
 
 
     if (protocol == JSON) {
-      printf("bonjour %lf", result);
+      // printf("bonjour %lf", result);
       JSONArray *args = create_array();
       sprintf(resultat, "%lf", result);
       insert_str_into_array(resultat, args);
