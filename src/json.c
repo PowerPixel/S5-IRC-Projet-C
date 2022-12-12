@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-JSONObject *parse_json(char *input) {
+JSONObject * parse_json(char *input) {
   JSONObject *object = malloc(sizeof(JSONObject));
   object->fields = malloc(sizeof(JSONField) * MAX_JSON_FIELDS);
   object->nb_field = 0;
@@ -38,6 +38,7 @@ JSONObject *parse_json(char *input) {
               "object)");
           exit(1);
         }
+        in_object = 1;
         break;
       case ' ':
       case '\t':
@@ -46,6 +47,10 @@ JSONObject *parse_json(char *input) {
         break;
     };
     input++;
+  }
+  if (in_object == 0) {
+    perror("Object was not terminated with a closing curly bracket. Exiting.");
+    exit(EXIT_FAILURE);
   }
   return object;
 }
@@ -59,13 +64,12 @@ JSONField *parse_field(char **input) {
   while (*_input != '\"') {
     memcpy(&(key[size_key++]), _input++, 1);
   }
+  _input++;
   key[size_key + 1] = '\0';
   result->key = key;
-  _input++;
   while (*_input != ':') {
-    if (*_input != ' ' || *_input != '\t' || *_input != '\n') {
-      printf("%c", *_input);
-      perror("Unexepected char during field value parsing");
+    if ((*_input != ' ') && (*_input != '\t') && (*_input != '\n')) {
+      printf("Unexepected char during field value parsing (key is %s) -> %d", result->key, *_input);
       exit(1);
     }
     _input++;
@@ -79,13 +83,13 @@ JSONField *parse_field(char **input) {
     case '"':
       // Parsing string
       _input++;
-      result->type = 0;
+      result->type = String;
       result->value.string = parse_string(&_input);
       break;
     case '[':
       // Parsing array
       _input++;
-      result->type = 2;
+      result->type = Array;
       result->value.array = parse_array(&_input);
       break;
     default:

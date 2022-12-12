@@ -10,7 +10,9 @@
  * Code permettant de stocker différents types de couleurs : format 24 bits
  * (RGB) ou format 32 bits (32).
  */
+#ifndef __MD_JSON
 
+#define __MD_JSON
 #define MAX_JSON_FIELDS 1024
 #define MAX_KEY_SIZE 1024
 #define MAX_STRING_SIZE 1024
@@ -131,3 +133,5 @@ int json_to_text(JSONObject *object, char *data);
     Method to convert JSON array to text !!!!!! omg!!!
  */
 int json_to_text_calcul(JSONObject *object, char *data);
+
+#endif

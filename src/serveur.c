@@ -21,6 +21,7 @@
 
 #include "commons.h"
 #include "json.h"
+#include "validation.h"
 
 void plot(char *data) {
   // Extraire le compteur et les couleurs RGB
@@ -162,6 +163,8 @@ int recois_envoie_message(int socketfd) {
   printf("Message recu: %s\n", data);
 
   if (protocol == JSON) {
+    // Server side validation of received json
+    validate_json_string_is_expected_format(data);
     object = parse_json(data);
     // TODO: because of protocol specifications inconcistencies, we need a
     // special conversion to Text format for calcul operations... calcul

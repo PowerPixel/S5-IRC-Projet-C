@@ -62,4 +62,9 @@ int generation_couleurs_aleatoire(char *data);
  */
 char *get_hostname();
 
+/*
+ * Fonction qui teste la validation d'une chaîne en JSON
+ */
+
+void validation(char* json_to_test);
 #endif

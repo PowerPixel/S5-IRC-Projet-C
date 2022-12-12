@@ -27,6 +27,7 @@
 #include "bmp.h"
 #include "commons.h"
 #include "json.h"
+#include "validation.h"
 
 void parse_json_file(char *json_filename) {
   int file = open(json_filename, O_RDONLY);
@@ -420,6 +421,18 @@ int generer_entier_aleatoire(int min, int max) {
   return (rand() % (max - min + 1)) + min;
 }
 
+void validation(char* json_to_test) {
+  int is_valid = validate_json_string_is_expected_format(json_to_test);
+  printf("is_valid = %d\n", is_valid);
+  if (is_valid) {
+    printf("JSON is not valid according to specification\n");
+    exit(EXIT_FAILURE);
+  }
+
+  printf("JSON is valid\n");
+  exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char **argv) {
   int socketfd;
   Protocol parse_mode = Text;
@@ -494,5 +507,8 @@ int main(int argc, char **argv) {
     envoie_couleurs(socketfd, parse_mode, argv[2], argv[3]);
   }
 
+  if (strcmp(argv[1], "validation") == 0) {
+    validation(argv[2]);
+  }
   close(socketfd);
 }
