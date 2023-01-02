@@ -18,7 +18,7 @@
 #define MAX_STRING_SIZE 1024
 #define MAX_ARRAY_SIZE 1024
 
-typedef enum { String, Array, Integer } JSONType;
+typedef enum { String, Array, Float } JSONType;
 
 // Structure representing a JSON Array, they can be of various type so we did a
 // little bit of engineering : [ 2, "#blc", "#cishard"] [ 0, 1, 1 ] We define
@@ -110,7 +110,7 @@ void insert_str_into_array(char *string, JSONArray *array);
     Method to insert a integer into an array
 */
 
-void insert_int_into_array(int *integer, JSONArray *array);
+void insert_float_into_array(float *integer, JSONArray *array);
 
 /*
     Method to convert JSONObject to data string (for sending over a socket)

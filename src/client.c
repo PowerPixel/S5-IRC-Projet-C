@@ -160,16 +160,16 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol,
   } else if (protocol == JSON) {
     JSONArray *arguments = create_array();
     insert_str_into_array(operator, arguments);
-    int *_operand1 = malloc(sizeof(int));
-    int *_operand2 = malloc(sizeof(int));
+    float *_operand1 = malloc(sizeof(float));
+    float *_operand2 = malloc(sizeof(float));
 
-    int tmp = atoi(operand1);
-    memcpy(_operand1, &tmp, sizeof(int));
-    insert_int_into_array(_operand1, arguments);
+    float tmp = atof(operand1);
+    memcpy(_operand1, &tmp, sizeof(float));
+    insert_float_into_array(_operand1, arguments);
 
-    tmp = atoi(operand2);
-    memcpy(_operand2, &tmp, sizeof(int));
-    insert_int_into_array(_operand2, arguments);
+    tmp = atof(operand2);
+    memcpy(_operand2, &tmp, sizeof(float));
+    insert_float_into_array(_operand2, arguments);
 
     JSONObject *object = create_json_object("calcul", arguments);
 
@@ -262,9 +262,9 @@ int envoie_balises_socket(int socketfd, Protocol protocol, int nb_balises,
   } else if (protocol == JSON) {
     JSONObject *object;
     JSONArray *arguments = create_array();
-    int *_nb_balises = malloc(sizeof(int));
-    memcpy(_nb_balises, &nb_balises, sizeof(int));
-    insert_int_into_array(_nb_balises, arguments);
+    float *_nb_balises = malloc(sizeof(float));
+    memcpy(_nb_balises, &nb_balises, sizeof(float));
+    insert_float_into_array(_nb_balises, arguments);
     for (int i = 0; i < nb_balises; i++) {
       insert_str_into_array(balises[i], arguments);
     }
@@ -310,9 +310,9 @@ void analyse(char *pathname, Protocol protocol, char *data,
     sprintf(data + strlen(data), "%s", temp_string);
   } else if (protocol == JSON) {
     array = create_array();
-    int *nb_colors = malloc(sizeof(int));
+    float *nb_colors = malloc(sizeof(float));
     memcpy(nb_colors, &nb_colors_to_plot, sizeof(int));
-    insert_int_into_array(nb_colors, array);
+    insert_float_into_array(nb_colors, array);
   }
 
   // choisir n couleurs

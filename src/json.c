@@ -126,15 +126,16 @@ JSONArray *parse_array(char **input) {
     }
 
     if (*_input >= '0' && *_input <= '9') {
-      int *parsed_integer = malloc(sizeof(int));
-      *parsed_integer = 0;
+      float *parsed_float = malloc(sizeof(float));
+      *parsed_float = 0;
+      printf("Input for parse array : %c\n", *_input);
       while ((*_input >= '0') && (*_input <= '9')) {
-        *parsed_integer = *parsed_integer * 10 + (*_input - '0');
+        *parsed_float = *parsed_float * 10 + (*_input - '0');
         _input++;
       }
       result->array_size = result->array_size + 1;
-      result->array[result->array_size - 1] = parsed_integer;
-      result->array_type[result->array_size - 1] = Integer;
+      result->array[result->array_size - 1] = parsed_float;
+      result->array_type[result->array_size - 1] = Float;
     }
 
     if (*_input == '\"') {
@@ -187,7 +188,7 @@ void print_json_array(JSONArray *array) {
   if (array->array_size != 0) {
     for (int i = 0; i < array->array_size; i++) {
       switch (array->array_type[i]) {
-        case Integer:
+        case Float:
           printf("%d", *((int *)array->array[i]));
           break;
         case String:
@@ -250,10 +251,10 @@ void insert_str_into_array(char *str, JSONArray *array) {
   array->array_type[array->array_size - 1] = String;
 }
 
-void insert_int_into_array(int *integer, JSONArray *array) {
+void insert_float_into_array(float *integer, JSONArray *array) {
   array->array_size += 1;
   array->array[array->array_size - 1] = integer;
-  array->array_type[array->array_size - 1] = Integer;
+  array->array_type[array->array_size - 1] = Float;
 }
 
 void convert_to_data(char *data, JSONObject *object) {
@@ -284,8 +285,8 @@ void convert_json_array_to_data(char *data, JSONArray *array) {
   sprintf(data + strlen(data), "[");
   for (int i = 0; i < array->array_size; i++) {
     switch (array->array_type[i]) {
-      case Integer:
-        sprintf(data + strlen(data), "%d", *((int *)array->array[i]));
+      case Float:
+        sprintf(data + strlen(data), "%f", *((float *)array->array[i]));
         break;
       case String:
         sprintf(data + strlen(data), "\"%s\"", (char *)array->array[i]);
@@ -320,7 +321,7 @@ int json_to_text(JSONObject *object, char *data) {
         sprintf(data + strlen(data), "%s",
                 (char *)object->fields[1]->value.array->array[i]);
         break;
-      case Integer:
+      case Float:
         integer = (int *)object->fields[1]->value.array->array[i];
         sprintf(data + strlen(data), "%d", *integer);
         break;
@@ -350,16 +351,16 @@ int json_to_text_calcul(JSONObject *object, char *data) {
   }
 
   sprintf(data, "%s: ", object->fields[0]->value.string);
-  int *integer;
+  float *f;
   for (int i = 0; i < object->fields[1]->value.array->array_size; i++) {
     switch (object->fields[1]->value.array->array_type[i]) {
       case String:
         sprintf(data + strlen(data), "%s",
                 (char *)object->fields[1]->value.array->array[i]);
         break;
-      case Integer:
-        integer = (int *)object->fields[1]->value.array->array[i];
-        sprintf(data + strlen(data), "%d", *integer);
+      case Float:
+        f = (float *)object->fields[1]->value.array->array[i];
+        sprintf(data + strlen(data), "%f", *f);
         break;
       case Array:
       default:
