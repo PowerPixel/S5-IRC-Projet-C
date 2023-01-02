@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "commons.h"
 #include "json.h"
@@ -91,6 +92,57 @@ int renvoie_message(int client_socket_fd, char *data) {
   return (EXIT_SUCCESS);
 }
 
+
+void tri_a_bulle(double tab[],int size)
+{
+  int i, j;
+  double tmp;
+  for (i=0 ; i < size-1; i++)
+  {
+    for (j=0 ; j < size-i-1; j++)
+    {
+      /* Pour un ordre décroissant utiliser < */
+      if (tab[j] > tab[j+1]) 
+      {
+        tmp = tab[j];
+        tab[j] = tab[j+1];
+        tab[j+1] = tmp;
+      }
+    }
+  }
+}
+
+double moyenne(double tab[],int size)
+{
+  double tmp = 0.0;
+  for (int i=0 ; i < size; i++)
+  {
+    tmp = tmp + tab[i];
+  }
+  tmp = (double)tmp/(double)(size);
+  return tmp;
+}
+
+double ecart_type (double tab[],int size) {
+
+double moyenne_des_carre = 0.0 ;
+double carre_de_moyenne = 0.0;
+double tmp = 0.0;
+
+  carre_de_moyenne = moyenne(tab,size) * moyenne(tab,size);
+
+  for (int i=0 ; i < size; i++)
+  {
+    moyenne_des_carre = moyenne_des_carre + tab[i] * tab[i] ;
+  }
+  moyenne_des_carre = (double)moyenne_des_carre/(double)(size);
+
+  tmp = moyenne_des_carre - carre_de_moyenne;
+  tmp = sqrt(tmp);
+  return tmp;
+
+}
+
 /*
  * renvoyer un message (*data) au client (client_socket_fd)
  */
@@ -98,22 +150,81 @@ int renvoie_message(int client_socket_fd, char *data) {
 // TODO: We are aware that this command is not 100% compliant to the spec, we'll
 // be working on it :)
 int renvoie_calcul(char *data, double *result) {
-  char operator;
+  char operator[10];
   double operand1;
   double operand2;
+  char * copy = malloc(strlen(data) + 1); 
+  double tab[MAX_ARRAY_SIZE];
+  double moy;
+  double ecart_type_result;
+  char* tmpTab[MAX_ARRAY_SIZE];
+
+  strcpy(copy, data);
+
+  char *delim = " ";
+  unsigned count = 0;
+  /* First call to strtok should be done with string and delimiter as first and second parameter*/
+  char *token = strtok(copy,delim);
+  count++;
+
+  /* Consecutive calls to the strtok should be with first parameter as NULL and second parameter as delimiter
+    * * return value of the strtok will be the split string based on delimiter*/
+  while(token != NULL)
+          {
+            // if(strcmp(operator, "minimum") == 0|| strcmp(operator, "maximum") == 0 || strcmp(operator, "moyenne") == 0 || strcmp(operator, "ecart-type") ){
+            //   if(count > 3 ){
+            //     tmpTab[0] = token;
+            //   }
+            // }
+            /* else*/ if (count > 2 ){
+                tab[count-3] = atof(token); 
+                // printf("tableau[%d] => %lf \n", count-3,tab[count-3]);
+              }
+            // printf("Token no. %d : %s \n", count,token);
+            token = strtok(NULL,delim);
+            count++;
+          }
+  free(copy);
+
+  // if(strcmp(operator, "minimum") || strcmp(operator, "maximum") || strcmp(operator, "moyenne") || strcmp(operator, "ecart-type") ){
+  //   char *delim2 = ",";
+  //   unsigned count2 = 0;
+  //   /* First call to strtok should be done with string and delimiter as first and second parameter*/
+  //   char *token2 = strtok(tmpTab[0],delim2);
+  //   count2++;
+  //   while(token2 != NULL)
+  //           {
+  //             // printf("Token no. %d : %s \n", count2,token2);
+  //             tab[count2-1] = atof(token2);
+  //             token2 = strtok(NULL,delim2);
+  //             count2++;
+  //           }
+  //   tri_a_bulle(tab,count2-1); 
+  // }
+  /*else { */tri_a_bulle(tab,count-3); /*}*/
 
   // Reading and interpreting operators and operands
-  sscanf(data, "%*s %s %lf %lf", &operator, & operand1, & operand2);
+  sscanf(data, "%*s %s %lf %lf", operator, & operand1, & operand2);
 
   // Simple verification of operand
-  if (strcmp(&operator, "+") == 0) {
+  if (strcmp(operator, "+") == 0) {
     *result = operand1 + operand2;
-  } else if (strcmp(&operator, "-") == 0) {
+  } else if (strcmp(operator, "-") == 0) {
     *result = operand1 - operand2;
-  } else if (strcmp(&operator, "/") == 0) {
+  } else if (strcmp(operator, "/") == 0) {
     *result = operand1 / operand2;
-  } else if (strcmp(&operator, "*") == 0) {
+  } else if (strcmp(operator, "*") == 0) {
     *result = operand1 * operand2;
+  } else if (strcmp(operator, "minimum") == 0) {
+    *result = tab[0];
+  } else if (strcmp(operator, "maximum") == 0) {
+    *result = tab[count-4];
+  } else if (strcmp(operator, "moyenne") == 0) {
+    moy = moyenne(tab,count-3);
+    *result = moy;
+  } else if (strcmp(operator, "ecart-type") == 0) {
+    ecart_type_result = ecart_type(tab,count-3);
+    *result = ecart_type_result;
   } else {
     return (EXIT_FAILURE);
   }
@@ -212,7 +323,9 @@ int recois_envoie_message(int socketfd) {
     renvoie_calcul(data, &result);
     memset(data, 0, sizeof(data));
 
+
     if (protocol == JSON) {
+      // printf("bonjour %lf", result);
       JSONArray *args = create_array();
       sprintf(resultat, "%lf", result);
       insert_str_into_array(resultat, args);
