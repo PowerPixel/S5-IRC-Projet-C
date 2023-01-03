@@ -19,7 +19,7 @@
  * envoyées par le client. En suite, le serveur envoie un message
  * en retour
  */
-int recois_envoie_message(int socketfd);
+int recois_envoie_message(void * arg);
 
 int recois_balises(char *data);
 

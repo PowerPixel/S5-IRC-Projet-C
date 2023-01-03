@@ -128,7 +128,7 @@ JSONArray *parse_array(char **input) {
     if (*_input >= '0' && *_input <= '9') {
       float *parsed_float = malloc(sizeof(float));
       *parsed_float = 0;
-      printf("Input for parse array : %c\n", *_input);
+      // printf("Input for parse array : %c\n", *_input);
       while ((*_input >= '0') && (*_input <= '9')) {
         *parsed_float = *parsed_float * 10 + (*_input - '0');
         _input++;

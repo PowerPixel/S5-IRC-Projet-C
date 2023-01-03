@@ -6,7 +6,8 @@ SOBJS ?= serveur.o json.o validation.o
 
 # Avertissements
 CFLAGS ?= -Wall -Wextra
-LIB ?= -lm
+# Bibliothèques
+LIBS ?= -lm -lpthread
 
 # Déboggage
 DEBUG ?= -ggdb3
@@ -20,11 +21,11 @@ all: $(SERVER) $(CLIENT)
 
 # Création d'un exécutable pour le côté serveur
 $(SERVER): $(SOBJS)
-	$(CC) $(DEBUG) $(CFLAGS) -o $(SERVER) $(SOBJS) $(LIB)
+	$(CC) $(DEBUG) $(CFLAGS) -o $(SERVER) $(SOBJS) $(LIBS)
 
 # Création d'un exécutable pour le côté client
 $(CLIENT): $(COBJS)
-	$(CC) $(DEBUG) $(CFLAGS) -o $(CLIENT) $(COBJS)
+	$(CC) $(DEBUG) $(CFLAGS) -o $(CLIENT) $(COBJS) $(LIBS)
 
 # Compilation du code sans création d'un exécutable
 .c.o: 

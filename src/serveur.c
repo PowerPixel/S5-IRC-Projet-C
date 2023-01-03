@@ -19,6 +19,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <math.h>
+#include <threads.h>
 
 #include "commons.h"
 #include "json.h"
@@ -125,9 +126,9 @@ double moyenne(double tab[],int size)
 
 double ecart_type (double tab[],int size) {
 
-double moyenne_des_carre = 0.0 ;
-double carre_de_moyenne = 0.0;
-double tmp = 0.0;
+  double moyenne_des_carre = 0.0 ;
+  double carre_de_moyenne = 0.0;
+  double tmp = 0.0;
 
   carre_de_moyenne = moyenne(tab,size) * moyenne(tab,size);
 
@@ -157,7 +158,7 @@ int renvoie_calcul(char *data, double *result) {
   double tab[MAX_ARRAY_SIZE];
   double moy;
   double ecart_type_result;
-  char* tmpTab[MAX_ARRAY_SIZE];
+  // char* tmpTab[MAX_ARRAY_SIZE];
 
   strcpy(copy, data);
 
@@ -236,21 +237,24 @@ int renvoie_calcul(char *data, double *result) {
  * envoyées par le client. En suite, le serveur envoie un message
  * en retour
  */
-int recois_envoie_message(int socketfd) {
-  struct sockaddr_in client_addr;
+int recois_envoie_message(void * arg) {
+
+  int client_socket_fd = *((int *) arg);
+
+  // struct sockaddr_in client_addr;
   char data[1024];
   Protocol protocol = Text;
   JSONObject *object;
 
-  unsigned int client_addr_len = sizeof(client_addr);
+  // unsigned int client_addr_len = sizeof(client_addr);
 
   // nouvelle connection de client
-  int client_socket_fd =
-      accept(socketfd, (struct sockaddr *)&client_addr, &client_addr_len);
-  if (client_socket_fd < 0) {
-    perror("accept");
-    return (EXIT_FAILURE);
-  }
+  // int client_socket_fd =
+  //     accept(socketfd, (struct sockaddr *)&client_addr, &client_addr_len);
+  // if (client_socket_fd < 0) {
+  //   perror("accept");
+  //   return (EXIT_FAILURE);
+  // }
 
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
@@ -363,7 +367,7 @@ int recois_envoie_message(int socketfd) {
   }
 
   // fermer le socket
-  close(socketfd);
+  close(client_socket_fd);
   return (EXIT_SUCCESS);
 }
 
@@ -436,8 +440,30 @@ int main() {
   // Écouter les messages envoyés par le client
   listen(socketfd, 10);
 
-  // Lire et répondre au client
-  recois_envoie_message(socketfd);
+  struct sockaddr_in client_addr;
 
+
+  unsigned int client_addr_len = sizeof(client_addr);
+  int ppid = getpid();
+
+  //On crée un système de fils. Dès que le serveur reçoit un message, il crée un fils qui sort de la boucle et execute le programme
+  // Pendant ce temps, le père reste dans la boucle et crée des fils pour chaque requête client.
+  while(ppid == getpid()){
+    
+    // nouvelle connection de client
+    int client_socket_fd = accept(socketfd, (struct sockaddr *)&client_addr, &client_addr_len);
+    if (client_socket_fd < 0)
+    {
+      perror("erreur accept");
+      return (EXIT_FAILURE);
+    }
+    thrd_t thread1;
+
+    if ( thrd_create( &thread1, recois_envoie_message, &client_socket_fd ) != thrd_success ) {
+        fprintf( stderr, "Impossible de créer le thread\n" );
+        return EXIT_FAILURE;
+    }
+  
+  }
   return 0;
 }
