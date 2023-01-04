@@ -1,6 +1,8 @@
 # Bibliothèques
 
-Aucune librairie n'a été utilisée pour l'instant
+<math.h> permet de d'utiliser la fonction racine carré
+
+<thread.h> permet de creer des thread a chaque nouvel utilisateur connecté
 
 # Références
 
@@ -39,8 +41,10 @@ Vous pouvez retrouver la syntaxe en tapant simplement `./client`
 
  * Fonction **calcul** : ```./client calcul <operateur> <opérande> <opérande>```
 
+ * Fonction **calcul complexe** : ```./client calcul <nom_operation> <opérande> <opérande>``` <nom_operation> peut etre minimum, maximum, moyenne, ecart-type
+
  * Fonction **balises** : ```./client balises random```, random permet de générer directement aleatoirement entre 10 et 15 balises sans avoir à les écrires.
 
  * Fonction **bmp** : ```./client bmp <chemin_vers_l'image> <nombre_de_couleur_à_analysé>```
 
-  
+### Le serveur peut gerer plusieurs client
