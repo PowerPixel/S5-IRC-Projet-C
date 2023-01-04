@@ -28,6 +28,7 @@
 #include "commons.h"
 #include "json.h"
 #include "validation.h"
+#include "testes.h"
 
 void parse_json_file(char *json_filename) {
   int file = open(json_filename, O_RDONLY);
@@ -50,6 +51,7 @@ char *get_hostname() {
 
   return hostname;
 }
+
 
 /*
  * Fonction d'envoi et de réception de messages
@@ -81,6 +83,7 @@ int envoie_recois_message(int socketfd, Protocol protocol) {
   }
 
   int write_status = write(socketfd, data, strlen(data));
+  test_message( write_status );
   if (write_status < 0) {
     perror("erreur ecriture");
     exit(EXIT_FAILURE);
@@ -107,6 +110,7 @@ int envoie_recois_hostname(int socketfd, Protocol protocol) {
   // la réinitialisation de l'ensemble des données
   memset(data, 0, sizeof(data));
   sprintf(data, "%d\n", protocol);
+  test_hostname(get_hostname());
   if (protocol == Text) {
     sprintf(data + strlen(data), "nom: ");
     sprintf(data + strlen(data), "%s", get_hostname());
@@ -191,7 +195,11 @@ int envoie_calcul_recois_resultat(int socketfd, Protocol protocol,
     perror("erreur lecture resultat");
     return -1;
   }
+  char * temp_reslt = malloc(strlen(resultat) + 1);
+  strcpy(temp_reslt, resultat);
+  test_calcul( temp_reslt, operator, operand1, operand2);
 
+  free(temp_reslt);
   printf("Message recu: %s\n", resultat);
 
   return 0;
